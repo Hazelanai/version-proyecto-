@@ -2,147 +2,162 @@
 #include <windows.h>
 #include <cstdlib>
 #include <ctime>
+#include <string>
+#include <limits>      
 #include "header.h"
 using namespace std;
 
-void registrarJugadores(Jugador jugadores[], int &numJugadores) {
-
-    cout << "Cuantos jugadores desea registrar? (2 - 5): " << endl;
-    cin >> numJugadores;
-
-    while (numJugadores < 2 || numJugadores > 5) {
-        cout << "Error, solo se permiten entre 2 y 5 jugadores. Intente de nuevo" << endl;
-        cin >> numJugadores;
-    }
-
-    for (int i = 0; i < numJugadores; i++) {
-        cout << "Jugador " << (i + 1) << endl;
-
-        // Validar nombre
-        bool nombreValido = false;
-        while (!nombreValido) {
-            cout << "Nombre: " << endl;
-            cin >> jugadores[i].nombre;
-
-            nombreValido = true;
-            for (char letra : jugadores[i].nombre) {
-                if (!((letra >= 'A' && letra <= 'Z') || 
-                      (letra >= 'a' && letra <= 'z'))) {
-                    nombreValido = false;
-                    cout << "Error, el nombre solo debe contener letras. Intente de nuevo." << endl;
-                    break;
-                }
-            }
-        }
-
-        // Primera letra del nombre como simbolo
-        jugadores[i].simbolo = jugadores[i].nombre[0];
-
-        jugadores[i].victorias = 0;
-        jugadores[i].carrerasJugadas = 0;
-        jugadores[i].posicion = 0;
-    }
-
-    cout << "Jugadores registrados correctamente" << endl;
-}
-
-int generateRandom1to5() {
-    return (rand() % 5) + 1;
-}
+Carrera histCarr[MAX_CARRERAS];
+int numCarr = 0;
 
 void gotoxy(int x, int y) {
-    COORD coord;
-    coord.X = x;
-    coord.Y = y;
-    SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), coord); 
+    COORD c; c.X = x; c.Y = y;
+    SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), c); 
 }
 
 void ocultarCursor() {
-    HANDLE hCon; 
     CONSOLE_CURSOR_INFO cci; 
-    hCon = GetStdHandle(STD_OUTPUT_HANDLE); 
-    cci.dwSize = 1; 
-    cci.bVisible = FALSE; 
-    SetConsoleCursorInfo(hCon, &cci);
+    cci.dwSize = 1; cci.bVisible = FALSE;
+    SetConsoleCursorInfo(GetStdHandle(STD_OUTPUT_HANDLE), &cci);
 }
 
+int rand1to5() { return (rand() % 5) + 1; }
 
-void playRace(Jugador jugadores[], int players) {
-
-    const int startX = 0;
-    const int startY = 5;
-
-    CONSOLE_SCREEN_BUFFER_INFO csbi;
-    int finishX;
-
-    if (GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi)) {
-        int consoleWidth = csbi.srWindow.Right - csbi.srWindow.Left + 1;
-        finishX = (startX + 25 > consoleWidth - 10)
-                    ? (startX + 25)
-                    : (consoleWidth - 7);
-    } else {
-        finishX = 80;
+void registrarJugadores(Jugador jugs[], int &numJugs) {
+    cout << "Cuantos jugadores (2-5): " << endl; 
+    cin >> numJugs;
+    while (numJugs < 2 || numJugs > 5) { 
+        cout << "Error, intente de nuevo " << endl; 
+        cin >> numJugs; 
     }
 
-    int pos[5];
-    for (int i = 0; i < players; i++)
-        pos[i] = 0;
+    for (int i = 0; i < numJugs; i++) {
+        bool ok = false;
+        while (!ok) {
+            cout << "Nombre jugador " << (i+1) << ": " << endl; 
+            cin >> jugs[i].nombre;
+            ok = true;
+            for (char c : jugs[i].nombre) {
+                if (!((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z'))) { 
+                    ok = false; 
+                    cout << "Solo letras. Intente de nuevo" << endl; 
+                    break; 
+                }
+            }
+        }
+        jugs[i].simbolo = jugs[i].nombre[0];
+        jugs[i].victorias = jugs[i].carrerasJugadas = jugs[i].posicion = jugs[i].empates = 0;
+    }
+    cout << "Jugadores registrados" << endl;
+}
 
-    system("cls");
+void playRace(Jugador jugs[], int numJugs) {
+    const int startX = 0, startY = 5;
+    int finishX = 80;
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
+    if (GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi))
+        finishX = (startX+25 > csbi.srWindow.Right-7) ? startX+25 : csbi.srWindow.Right-7;
+
+    int posAct[5] = {0};
+    system("cls"); 
     ocultarCursor();
 
-    // Dibujar meta
-    for (int y = startY - 1; y <= startY + players; y++) {
-        gotoxy(finishX, y);
-        cout << "||";
+    for (int y = startY-1; y <= startY+numJugs; y++) { 
+        gotoxy(finishX, y); 
+        cout << "||"; 
     }
-
-    // Dibujar jugadores al inicio
-    for (int i = 0; i < players; i++) {
-        gotoxy(startX, startY + i);
-        cout << jugadores[i].simbolo;
+    for (int i = 0; i < numJugs; i++) { 
+        gotoxy(startX, startY+i); 
+        cout << jugs[i].simbolo; 
     }
 
     srand(time(0));
+    bool fin = false;
+    int ganador = -1;
 
-    bool finished = false;
-    int winner = -1;
-
-    while (!finished) {
+    while (!fin) {
         Sleep(120);
-
-        for (int i = 0; i < players; i++) {
-
-            if (startX + pos[i] >= finishX) continue;
-
-            gotoxy(startX + pos[i], startY + i);
+        for (int i = 0; i < numJugs; i++) {
+            if (startX + posAct[i] >= finishX) continue;
+            gotoxy(startX+posAct[i], startY+i); 
             cout << " ";
-
-            pos[i] += generateRandom1to5();
-
-            if (startX + pos[i] >= finishX) {
-                pos[i] = finishX - startX;
-
-                if (winner == -1) {
-                    winner = i;
-                    finished = true;
-                }
+            posAct[i] += rand1to5();
+            if (startX + posAct[i] >= finishX) { 
+                posAct[i] = finishX-startX; 
+                if (ganador==-1){ ganador=i; fin=true; } 
             }
-
-            gotoxy(startX + pos[i], startY + i);
-            cout << jugadores[i].simbolo;
+            gotoxy(startX+posAct[i], startY+i); 
+            cout << jugs[i].simbolo;
         }
     }
 
-    gotoxy(0, startY + players + 2);
-    cout << "Ganador: " << jugadores[winner].nombre 
-         << " (" << jugadores[winner].simbolo << ")";
+    gotoxy(0, startY+numJugs+2);
+    cout << "Ganador: " << jugs[ganador].nombre << " (" << jugs[ganador].simbolo << ")" << endl;
 
-    jugadores[winner].victorias++;
-    for (int i = 0; i < players; i++)
-        jugadores[i].carrerasJugadas++;
+    jugs[ganador].victorias++;
+    for (int i = 0; i < numJugs; i++) jugs[i].carrerasJugadas++;
 
-    gotoxy(0, startY + players + 4);
+    // Empates
+    int maxPos = -1;
+    for (int i = 0; i < numJugs; i++) if (posAct[i] >= maxPos) maxPos = posAct[i];
+    for (int i = 0; i < numJugs; i++) if (posAct[i] >= maxPos) jugs[i].empates++;
+
+    // Guardar historial
+    if (numCarr < MAX_CARRERAS) {
+        histCarr[numCarr].numJugadores = numJugs;
+        bool jugAdd[5] = {false};
+        int pos = 0;
+
+        while (pos < numJugs) {
+            int maxP = -1, jugMax = -1;
+            for (int i = 0; i < numJugs; i++) if (!jugAdd[i] && posAct[i] > maxP) { maxP=posAct[i]; jugMax=i; }
+            histCarr[numCarr].posiciones[pos] = jugMax;
+            jugAdd[jugMax] = true;
+
+            time_t t = time(0); 
+            struct tm *lt = localtime(&t); 
+            char buf[9];
+            strftime(buf, 9, "%H:%M:%S", lt);
+            histCarr[numCarr].horaLlegada[pos] = buf;
+
+            pos++;
+        }
+        numCarr++;
+    }
+
+    gotoxy(0, startY+numJugs+4); 
     cout << "Presione ENTER para continuar..." << endl;
-    cin.ignore();
+    cin.ignore(numeric_limits<streamsize>::max(), '\n'); 
+    cin.get();
+}
+
+void mostrarEstadisticas(Jugador jugs[], int numJugs) {
+    if (numJugs==0){ 
+        cout<<"No hay jugadores registrados"<< endl; 
+        return; 
+    }
+    cout<<"ESTADISTICAS DE JUGADORES"<< endl;
+    cout<<"---------------------------"<< endl;
+    for(int i=0;i<numJugs;i++){
+        cout<<"Jugador: "<<jugs[i].nombre<<" ("<<jugs[i].simbolo<<")"<< endl;
+        cout<<"  Carreras jugadas: "<<jugs[i].carrerasJugadas<< endl;
+        cout<<"  Victorias: "<<jugs[i].victorias<< endl;
+        cout<<"  Empates: "<<jugs[i].empates<< endl;
+        cout<<"---------------------------"<< endl;
+    }
+}
+
+void mostrarResumenCarreras(Jugador jugs[]) {
+    if (numCarr==0){ 
+        cout<<"No se ha jugado ninguna carrera"<< endl; 
+        return; 
+    }
+    for(int c=0;c<numCarr;c++){
+        cout<<"Carrera "<<(c+1)<<":"<< endl;
+        for(int p=0;p<histCarr[c].numJugadores;p++){
+            int idx = histCarr[c].posiciones[p];
+            cout<<"  "<<(p+1)<<"°: "<<jugs[idx].nombre<<" ("<<jugs[idx].simbolo<<") - Hora: "<<histCarr[c].horaLlegada[p]<< endl;
+        }
+        cout<< endl;
+    }
 }
