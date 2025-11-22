@@ -12,24 +12,28 @@ struct Jugador {
     char simbolo;
     int victorias;
     int carrerasJugadas;
-    int posicion;
     int empates;
+    int posicion;
 };
 
 struct Carrera {
+    string fechaHora;        
+    string ganador;         
     int numJugadores;
-    int posiciones[MAX_JUGADORES];
-    string horaLlegada[MAX_JUGADORES];
+    string participantes[MAX_JUGADORES]; 
+    int posiciones[MAX_JUGADORES];     
+    int puntajes[MAX_JUGADORES];        
 };
 
-// Funciones del juego
-void gotoxy(int x, int y);
-void ocultarCursor();
-int rand1to5();
+// Variables globales 
+extern Carrera histCarr[MAX_CARRERAS];
+extern int numCarr;
 
+// Funciones
 void registrarJugadores(Jugador jugs[], int &numJugs);
 void playRace(Jugador jugs[], int numJugs);
 void mostrarEstadisticas(Jugador jugs[], int numJugs);
 void mostrarResumenCarreras(Jugador jugs[]);
+void guardarHistorialArchivo();
 
 #endif
