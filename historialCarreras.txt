@@ -1,2 +1,50 @@
 2025-11-22 10:56:06,Dani,Hazel(8);Dani(6);Rosa(4);Emanuel(2)
 2025-11-22 11:10:19,Empate,Ema(8);Pablo(6);Jose(4);Oscar(2)
+Carrera 1
+Fecha: Sat Nov 22 14:22:19 2025
+Ganador: Empate
+1°: Hazel - Puntos: 8
+2°: Oscar - Puntos: 6
+3°: Marta - Puntos: 4
+4°: Lola - Puntos: 2
+
+Carrera 1
+Fecha: Sat Nov 22 14:22:19 2025
+Ganador: Empate
+1°: Hazel - Puntos: 8
+2°: Oscar - Puntos: 6
+3°: Marta - Puntos: 4
+4°: Lola - Puntos: 2
+
+Carrera 2
+Fecha: Sat Nov 22 14:23:16 2025
+Ganador: Empate
+1°: Hazel - Puntos: 8
+2°: Oscar - Puntos: 6
+3°: Marta - Puntos: 4
+4°: Lola - Puntos: 2
+
+Carrera 1
+Fecha: Sat Nov 22 15:17:23 2025
+Ganador: Empate
+1°: Hazel - Puntos: 8
+2°: Roro - Puntos: 6
+3°: Key - Puntos: 4
+4°: Paty - Puntos: 2
+
+Carrera 1
+Fecha: Sat Nov 22 15:25:23 2025
+Ganador: Empate
+1°: Victor - Puntos: 10
+2°: Carmen - Puntos: 8
+3°: Tomas - Puntos: 6
+4°: Emanuel - Puntos: 4
+5°: Karina - Puntos: 2
+
+Carrera 1
+Fecha: Sat Nov 22 15:35:58 2025
+Ganador: Hazel
+1°: Hazel - Puntos: 6
+2°: Tomas - Puntos: 4
+3°: Evelyn - Puntos: 2
+

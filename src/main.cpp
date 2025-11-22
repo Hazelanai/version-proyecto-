@@ -2,7 +2,7 @@
 #include <cstdlib>
 #include <algorithm>
 #include <limits>
-#include "header.h"
+#include "../include/header.h"
 using namespace std;
 
 int main() {
@@ -32,7 +32,7 @@ int main() {
 
             case 2:
                 if (numJugadores < 2) {
-                    cout << "Error: Se necesitan al menos 2 jugadores." << endl;
+                    cout << "Error: Se necesitan al menos 2 jugadores" << endl;
                 } else {
                     cout << "Iniciando carrera..." << endl;
                     playRace(jugadores, numJugadores);
@@ -71,7 +71,7 @@ int main() {
                     }
 
                 } else {
-                    cout << "No hay jugadores registrados." << endl;
+                    cout << "No hay jugadores registrados" << endl;
                 }
                 break;
 
