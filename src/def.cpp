@@ -36,7 +36,7 @@ int avanceAleatorio() {
 
 // registrar jugadores
 void registrarJugadores(Jugador jugs[], int &numJugs) {
-    cout << "Cuantos jugadores (2-5)?" << endl;
+    cout << "Cuantos jugadores se desean registrar?" << endl;
     cin >> numJugs;
     if (numJugs < 2 || numJugs > 5) {
         cout << "Cantidad invalida. Debe ser entre 2 y 5." << endl;
@@ -64,7 +64,7 @@ void registrarJugadores(Jugador jugs[], int &numJugs) {
         jugs[i].empates = 0;
     }
 
-    cout << "Jugadores registrados." << endl;
+    cout << "Jugadores registrados" << endl;
 }
 
 // imprime la pista (usa gotoxy para dibujar)
@@ -79,7 +79,7 @@ void dibujarPista(Jugador jugs[], int numJugs, int pos[]) {
     for (int i = 0; i < numJugs; i++) {
         // imprimir símbolo del jugador al inicio
         gotoxy(0, startY + i);
-        cout << jugs[i].simbolo << " ";
+        cout << jugs[i].simbolo << " " << endl;
 
         // imprimir pista con puntos y posición del jugador
         cout << "|";
@@ -87,7 +87,7 @@ void dibujarPista(Jugador jugs[], int numJugs, int pos[]) {
             if (c == pos[i])
                 cout << jugs[i].simbolo;
             else
-                cout << ".";
+                cout << "." << endl;
         }
         cout << "|" << endl;
     }
@@ -239,4 +239,25 @@ void guardarHistorialArchivo() {
         archivo << endl;
     }
     archivo.close();
+}
+
+void mostrarOrdenLlegada() {
+    if (numCarr == 0) {
+        cout << "No se ha jugado ninguna carrera." << endl;
+        return;
+    }
+
+    for (int c = 0; c < numCarr; c++) {
+        cout << "Carrera " << c + 1 << " - " << histCarr[c].fechaHora << endl;
+
+        for (int p = 0; p < histCarr[c].numJugadores; p++) {
+            int idx = histCarr[c].posiciones[p];
+            cout << (p + 1) << "°: " 
+                 << histCarr[c].participantes[idx]
+                 << " - Puntos: " << histCarr[c].puntajes[p] 
+                 << endl;
+        }
+
+        cout << endl;
+    }
 }
