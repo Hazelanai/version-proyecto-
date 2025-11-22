@@ -6,178 +6,237 @@
 #include <fstream>
 #include <windows.h>
 #include "../include/header.h"
-
 using namespace std;
+
 
 Carrera histCarr[MAX_CARRERAS];
 int numCarr = 0;
 
+// posiciona cursor
 void gotoxy(int x, int y) {
-    COORD c; c.X = x; c.Y = y;
+    COORD c;
+    c.X = x;
+    c.Y = y;
     SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), c);
 }
 
+// oculta cursor
 void ocultarCursor() {
+    HANDLE hCon = GetStdHandle(STD_OUTPUT_HANDLE);
     CONSOLE_CURSOR_INFO cci;
     cci.dwSize = 1;
     cci.bVisible = FALSE;
-    SetConsoleCursorInfo(GetStdHandle(STD_OUTPUT_HANDLE), &cci);
+    SetConsoleCursorInfo(hCon, &cci);
 }
 
-int rand1to5() { return (rand() % 5) + 1; }
+// avance aleatorio 1..3
+int avanceAleatorio() {
+    return (rand() % 3) + 1;
+}
 
+// registrar jugadores
 void registrarJugadores(Jugador jugs[], int &numJugs) {
-    cout << "Cuantos jugadores (2-5): ";
+    cout << "Cuantos jugadores (2-5)?" << endl;
     cin >> numJugs;
-    while(numJugs < 2 || numJugs > 5) {
-        cout << "Error, intente de nuevo: ";
-        cin >> numJugs;
+    if (numJugs < 2 || numJugs > 5) {
+        cout << "Cantidad invalida. Debe ser entre 2 y 5." << endl;
+        numJugs = 0;
+        return;
     }
 
-    for(int i=0;i<numJugs;i++){
-        bool ok=false;
-        while(!ok){
-            cout << "Nombre jugador " << (i+1) << ": ";
+    for (int i = 0; i < numJugs; i++) {
+        bool ok = false;
+        while (!ok) {
+            cout << "Nombre jugador " << (i + 1) << ":" << endl;
             cin >> jugs[i].nombre;
-            ok=true;
-            for(char c: jugs[i].nombre){
-                if(!((c>='A' && c<='Z') || (c>='a' && c<='z'))){
-                    ok=false;
-                    cout << "Solo letras. Intente de nuevo.\n";
+            ok = true;
+            for (char c : jugs[i].nombre) {
+                if (!((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z'))) {
+                    ok = false;
+                    cout << "Solo letras. Intente de nuevo." << endl;
                     break;
                 }
             }
         }
-        jugs[i].simbolo = jugs[i].nombre[0];
-        jugs[i].victorias = jugs[i].carrerasJugadas = jugs[i].empates = 0;
+        jugs[i].simbolo = toupper(jugs[i].nombre[0]);
+        jugs[i].victorias = 0;
+        jugs[i].carrerasJugadas = 0;
+        jugs[i].empates = 0;
     }
-    cout << "Jugadores registrados.\n";
+
+    cout << "Jugadores registrados." << endl;
 }
 
-void playRace(Jugador jugs[], int numJugs) {
-    const int startX=0, startY=5;
-    const int finishX=50;
-    int posAct[MAX_JUGADORES]={0};
+// imprime la pista (usa gotoxy para dibujar)
+void dibujarPista(Jugador jugs[], int numJugs, int pos[]) {
+    int startX = 2;
+    int startY = 2;
+
+    // limpiar pantalla
     system("cls");
-    ocultarCursor();
 
-    // Dibujar meta
-    for(int y=startY; y<startY+numJugs; y++){
-        gotoxy(finishX, y);
+    // dibujar cada fila de la pista
+    for (int i = 0; i < numJugs; i++) {
+        // imprimir símbolo del jugador al inicio
+        gotoxy(0, startY + i);
+        cout << jugs[i].simbolo << " ";
+
+        // imprimir pista con puntos y posición del jugador
         cout << "|";
+        for (int c = 0; c < PISTA; c++) {
+            if (c == pos[i])
+                cout << jugs[i].simbolo;
+            else
+                cout << ".";
+        }
+        cout << "|" << endl;
     }
 
-    // Mostrar jugadores al inicio
-    for(int i=0;i<numJugs;i++){
-        gotoxy(startX,startY+i);
-        cout << jugs[i].simbolo;
-    }
+    // dejar línea en blanco después de pistas
+    cout << endl;
+}
 
-    srand(time(0));
+// playRace con gotoxy y movimiento visible
+void playRace(Jugador jugs[], int numJugs) {
+    ocultarCursor();
+    srand((unsigned)time(0));
 
-    // Guardar fecha y hora de inicio
-    time_t t=time(0);
-    struct tm *lt = localtime(&t);
-    char buf[20];
-    strftime(buf,20,"%Y-%m-%d %H:%M:%S",lt);
-    histCarr[numCarr].fechaHora = buf;
+    int pos[MAX_JUGADORES] = {0};
+    for (int i = 0; i < MAX_JUGADORES; i++) pos[i] = 0;
 
+    // guardar fecha/hora y participantes en historial
+    time_t t = time(0);
+    string fecha = ctime(&t);
+    if (!fecha.empty() && fecha.back() == '\n') fecha.pop_back();
+    histCarr[numCarr].fechaHora = fecha;
     histCarr[numCarr].numJugadores = numJugs;
-    for(int i=0;i<numJugs;i++) histCarr[numCarr].participantes[i] = jugs[i].nombre;
+    for (int i = 0; i < numJugs; i++)
+        histCarr[numCarr].participantes[i] = jugs[i].nombre;
 
-    bool fin=false;
-    while(!fin){
-        Sleep(120);
-        for(int i=0;i<numJugs;i++){
-            if(posAct[i]>=finishX) continue;
-            gotoxy(posAct[i], startY+i); cout << " "; // borrar
-            posAct[i] += rand1to5();
-            if(posAct[i]>=finishX){ posAct[i]=finishX; fin=true; }
-            gotoxy(posAct[i], startY+i); cout << jugs[i].simbolo;
+    bool terminado = false;
+    int primerCruceIdx = -1;
+
+    // bucle de carrera
+    while (!terminado) {
+        // avanzar cada jugador
+        for (int i = 0; i < numJugs; i++) {
+            if (pos[i] >= PISTA - 1) continue;
+            pos[i] += avanceAleatorio();
+            if (pos[i] > PISTA - 1) pos[i] = PISTA - 1;
+            if (pos[i] == PISTA - 1 && primerCruceIdx == -1) primerCruceIdx = i;
         }
+
+        // dibujar pista actualizada
+        dibujarPista(jugs, numJugs, pos);
+
+        // comprobar si todos llegaron o al menos uno
+        terminado = true;
+        for (int i = 0; i < numJugs; i++) {
+            if (pos[i] < PISTA - 1) {
+                terminado = false;
+                break;
+            }
+        }
+
+        Sleep(150);
     }
 
-    // Determinar ganador y empates
-    int maxPos=-1;
-    for(int i=0;i<numJugs;i++) if(posAct[i]>maxPos) maxPos=posAct[i];
-
-    int contGan=0, ganador=-1;
-    for(int i=0;i<numJugs;i++){
-        if(posAct[i]==maxPos){
-            contGan++;
-            ganador=i;
-        }
+    // determinar ganador/empate
+    int mejor = 0;
+    for (int i = 1; i < numJugs; i++) {
+        if (pos[i] > pos[mejor]) mejor = i;
     }
 
-    if(contGan>1){
+    int cuentaMax = 0;
+    for (int i = 0; i < numJugs; i++) if (pos[i] == pos[mejor]) cuentaMax++;
+
+    if (cuentaMax > 1) {
         histCarr[numCarr].ganador = "Empate";
-        for(int i=0;i<numJugs;i++) if(posAct[i]==maxPos) jugs[i].empates++;
+        for (int i = 0; i < numJugs; i++) if (pos[i] == pos[mejor]) jugs[i].empates++;
+        cout << "Ganador: Empate" << endl;
     } else {
-        histCarr[numCarr].ganador = jugs[ganador].nombre;
-        jugs[ganador].victorias++;
+        histCarr[numCarr].ganador = jugs[mejor].nombre;
+        jugs[mejor].victorias++;
+        cout << "Ganador: " << histCarr[numCarr].ganador << endl;
     }
 
-    for(int i=0;i<numJugs;i++) jugs[i].carrerasJugadas++;
+    // actualizar carreras jugadas
+    for (int i = 0; i < numJugs; i++) jugs[i].carrerasJugadas++;
 
-    // Guardar posiciones y puntajes
-    bool jugadorAsignado[MAX_JUGADORES]={false};
-    for(int p=0;p<numJugs;p++){
-        int maxP=-1, idx=-1;
-        for(int i=0;i<numJugs;i++){
-            if(!jugadorAsignado[i] && posAct[i]>maxP){ maxP=posAct[i]; idx=i; }
+    // guardar posiciones como índices y puntajes (puntaje ejemplo = posición inversa)
+    bool usados[MAX_JUGADORES] = {false};
+    for (int rank = 0; rank < numJugs; rank++) {
+        int best = -1;
+        int bestIdx = -1;
+        for (int i = 0; i < numJugs; i++) {
+            if (!usados[i] && pos[i] > best) {
+                best = pos[i];
+                bestIdx = i;
+            }
         }
-        histCarr[numCarr].posiciones[p] = p+1;
-        histCarr[numCarr].puntajes[p] = (numJugs-p)*2; // puntos descendentes
-        jugadorAsignado[idx]=true;
+        if (bestIdx == -1) bestIdx = 0;
+        histCarr[numCarr].posiciones[rank] = bestIdx; // índice del jugador
+        histCarr[numCarr].puntajes[rank] = (numJugs - rank) * 2;
+        usados[bestIdx] = true;
     }
-
-    cout << "\nGanador: " << histCarr[numCarr].ganador << endl;
 
     numCarr++;
-    cout << "\nPresione ENTER para continuar...";
-    cin.ignore(numeric_limits<streamsize>::max(),'\n');
+
+    cout << "Presione ENTER para continuar..." << endl;
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
     cin.get();
 }
 
-void mostrarEstadisticas(Jugador jugs[], int numJugs){
-    if(numJugs==0){ cout << "No hay jugadores registrados.\n"; return;}
-    cout << "ESTADISTICAS DE JUGADORES\n";
-    cout << "------------------------\n";
-    for(int i=0;i<numJugs;i++){
-        cout << "Jugador: " << jugs[i].nombre << " (" << jugs[i].simbolo << ")\n";
-        cout << "  Carreras jugadas: " << jugs[i].carrerasJugadas << endl;
+// mostrar estadisticas
+void mostrarEstadisticas(Jugador jugs[], int numJugs) {
+    if (numJugs == 0) {
+        cout << "No hay jugadores registrados." << endl;
+        return;
+    }
+    for (int i = 0; i < numJugs; i++) {
+        cout << "Jugador: " << jugs[i].nombre << endl;
         cout << "  Victorias: " << jugs[i].victorias << endl;
         cout << "  Empates: " << jugs[i].empates << endl;
-        cout << "------------------------\n";
+        cout << "  Carreras jugadas: " << jugs[i].carrerasJugadas << endl;
+        cout << "--------------------------" << endl;
     }
 }
 
-void mostrarResumenCarreras(Jugador jugs[]){
-    if(numCarr==0){ cout << "No se ha jugado ninguna carrera.\n"; return;}
-    for(int c=0;c<numCarr;c++){
-        cout << "Carrera " << c+1 << " - " << histCarr[c].fechaHora << ":\n";
-        cout << "  Ganador: " << histCarr[c].ganador << endl;
-        for(int p=0;p<histCarr[c].numJugadores;p++){
-            cout << "  " << histCarr[c].posiciones[p] << "°: " 
-                 << histCarr[c].participantes[p] 
+// mostrar resumen de carreras
+void mostrarResumenCarreras(Jugador jugs[]) {
+    if (numCarr == 0) {
+        cout << "No se ha jugado ninguna carrera." << endl;
+        return;
+    }
+    for (int c = 0; c < numCarr; c++) {
+        cout << "Carrera " << c + 1 << " - " << histCarr[c].fechaHora << endl;
+        cout << "Ganador: " << histCarr[c].ganador << endl;
+        for (int p = 0; p < histCarr[c].numJugadores; p++) {
+            int idx = histCarr[c].posiciones[p];
+            cout << (p + 1) << "°: " << histCarr[c].participantes[idx]
                  << " - Puntos: " << histCarr[c].puntajes[p] << endl;
         }
         cout << endl;
     }
 }
 
-void guardarHistorialArchivo(){
+// guardar historial en archivo
+void guardarHistorialArchivo() {
     ofstream archivo("historialCarreras.txt", ios::app);
-    if(!archivo){ cout << "Error al abrir archivo.\n"; return; }
-
-    for(int c=0;c<numCarr;c++){
-        archivo << histCarr[c].fechaHora << ",";
-        archivo << histCarr[c].ganador << ",";
-        for(int j=0;j<histCarr[c].numJugadores;j++){
-            archivo << histCarr[c].participantes[j] << "(" << histCarr[c].puntajes[j] << ")";
-            if(j<histCarr[c].numJugadores-1) archivo << ";";
+    if (!archivo) {
+        cout << "Error al abrir archivo." << endl;
+        return;
+    }
+    for (int c = 0; c < numCarr; c++) {
+        archivo << "Carrera " << c + 1 << endl;
+        archivo << "Fecha: " << histCarr[c].fechaHora << endl;
+        archivo << "Ganador: " << histCarr[c].ganador << endl;
+        for (int p = 0; p < histCarr[c].numJugadores; p++) {
+            int idx = histCarr[c].posiciones[p];
+            archivo << (p + 1) << "°: " << histCarr[c].participantes[idx]
+                    << " - Puntos: " << histCarr[c].puntajes[p] << endl;
         }
-        archivo << "\n";
+        archivo << endl;
     }
     archivo.close();
 }

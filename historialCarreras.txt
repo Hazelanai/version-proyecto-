@@ -1,0 +1,2 @@
+2025-11-22 10:56:06,Dani,Hazel(8);Dani(6);Rosa(4);Emanuel(2)
+2025-11-22 11:10:19,Empate,Ema(8);Pablo(6);Jose(4);Oscar(2)

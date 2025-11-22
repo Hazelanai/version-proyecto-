@@ -3,6 +3,7 @@
 
 #define MAX_CARRERAS 100
 #define MAX_JUGADORES 5
+#define PISTA 30
 
 #include <string>
 using namespace std;
@@ -24,11 +25,9 @@ struct Carrera {
     int puntajes[MAX_JUGADORES];
 };
 
-//variables globales
 extern Carrera histCarr[MAX_CARRERAS];
 extern int numCarr;
 
-//Funciones
 void registrarJugadores(Jugador jugs[], int &numJugs);
 void playRace(Jugador jugs[], int numJugs);
 void mostrarEstadisticas(Jugador jugs[], int numJugs);
