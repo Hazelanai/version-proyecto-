@@ -25,18 +25,17 @@ int main() {
         switch (opcion) {
 
             case 1:
-                registrarJugadores(jugadores, numJugadores);
+                registrarJugadores(jugadores, numJugadores); 
                 break;
 
             case 2:
                 if (numJugadores < 2) {
-                cout << "Error, deben registrarse 2 o mas jugadores para iniciar la carrera" << endl;
+                    cout << "Error, deben registrarse 2 o mas jugadores para iniciar la carrera" << endl;
                 } else {
-                cout << "Iniciando carrera..." << endl;
-                playRace(jugadores, numJugadores);
-               }
-               break;
-
+                    cout << "Iniciando carrera..." << endl;
+                    playRace(jugadores, numJugadores);
+                }
+                break;
 
             case 3:
                 cout << "Mostrando estadisticas..." << endl;

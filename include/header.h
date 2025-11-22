@@ -5,21 +5,18 @@
 using namespace std;
 
 struct Jugador {
-    string nombre;
-    char simbolo;
-    int victorias;
-    int carrerasJugadas;
-    int posicion;
+    string nombre;       
+    char simbolo;        
+    int victorias;       
+    int carrerasJugadas; 
+    int posicion;        
 };
 
-//Definicion de las funciones
-
+// Funciones
 void registrarJugadores(Jugador jugadores[], int &numJugadores);
-
-int generateRandom1to5();
+void playRace(Jugador jugadores[], int players);
 void gotoxy(int x, int y);
 void ocultarCursor();
-
-void playRace(Jugador jugadores[], int players);
+int generateRandom1to5();
 
 #endif

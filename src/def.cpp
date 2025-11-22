@@ -7,16 +7,16 @@ using namespace std;
 
 void registrarJugadores(Jugador jugadores[], int &numJugadores) {
 
-    cout << "Cuantos jugadores desea registrar? (2 - 5): ";
+    cout << "Cuantos jugadores desea registrar? (2 - 5): " << endl;
     cin >> numJugadores;
 
     while (numJugadores < 2 || numJugadores > 5) {
-        cout << "Error. Solo se permiten entre 2 y 5 jugadores. Intente de nuevo: ";
+        cout << "Error, solo se permiten entre 2 y 5 jugadores. Intente de nuevo" << endl;
         cin >> numJugadores;
     }
 
     for (int i = 0; i < numJugadores; i++) {
-        cout << "Jugador #" << (i + 1) << endl;
+        cout << "Jugador " << (i + 1) << endl;
 
         // Validar nombre
         bool nombreValido = false;
@@ -35,8 +35,8 @@ void registrarJugadores(Jugador jugadores[], int &numJugadores) {
             }
         }
 
-        cout << "Simbolo (1 caracter): " << endl;
-        cin >> jugadores[i].simbolo;
+        // Primera letra del nombre como simbolo
+        jugadores[i].simbolo = jugadores[i].nombre[0];
 
         jugadores[i].victorias = 0;
         jugadores[i].carrerasJugadas = 0;
