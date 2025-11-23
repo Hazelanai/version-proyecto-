@@ -35,21 +35,23 @@ int avanceAleatorio() {
 }
 
 void registrarJugadores(Jugador jugs[], int &numJugs) {
-    cout << "Cuantos jugadores se desean registrar? " << MAX_JUGADORES << ": " << endl;
-    cin >> numJugs;
-    if (numJugs < 2 || numJugs > MAX_JUGADORES) {
-        cout << "Cantidad invalida. Debe ser entre 2 y 5 " << MAX_JUGADORES << "." << endl;
-        numJugs = 0;
+    int cantidad;
+    cout << "Cuantos jugadores se desean registrar? (2 a 5): ";
+    cin >> cantidad;
+
+    if (cantidad < 2 || cantidad > 5) {
+        cout << "Cantidad invalida. Debe ser entre 2 y 5." << endl;
         return;
     }
 
-    for (int i = 0; i < numJugs; i++) {
+    for (int i = 0; i < cantidad; i++) {
+        string nombre;
         bool ok = false;
         while (!ok) {
-            cout << "Nombre jugador " << (i + 1) << ": " << endl;
-            cin >> jugs[i].nombre;
+            cout << "Nombre jugador " << (i + 1) << ": ";
+            cin >> nombre;
             ok = true;
-            for (unsigned char c : jugs[i].nombre) {
+            for (unsigned char c : nombre) {
                 if (!isalpha(c)) {
                     ok = false;
                     cout << "Solo letras. Intente de nuevo." << endl;
@@ -57,14 +59,30 @@ void registrarJugadores(Jugador jugs[], int &numJugs) {
                 }
             }
         }
-        jugs[i].simbolo = static_cast<char>(toupper(static_cast<unsigned char>(jugs[i].nombre[0])));
-        jugs[i].victorias = 0;
-        jugs[i].carrerasJugadas = 0;
-        jugs[i].empates = 0;
+
+        // Verificar si el jugador ya existe
+        bool existe = false;
+        for (int j = 0; j < numJugs; j++) {
+            if (jugs[j].nombre == nombre) {
+                cout << "El jugador " << nombre << " ya está registrado, se conservarán sus victorias" << endl;
+                existe = true;
+                break;
+            }
+        }
+
+        if (!existe) {
+            jugs[numJugs].nombre = nombre;
+            jugs[numJugs].simbolo = static_cast<char>(toupper(nombre[0]));
+            jugs[numJugs].victorias = 0;
+            jugs[numJugs].carrerasJugadas = 0;
+            jugs[numJugs].empates = 0;
+            numJugs++;
+        }
     }
 
-    cout << "Jugadores registrados" << endl;
+    cout << "Registro completado" << endl;
 }
+
 
 void dibujarPista(Jugador jugs[], int numJugs, int pos[], int pistaLength) {
     system("cls");
@@ -76,7 +94,7 @@ void dibujarPista(Jugador jugs[], int numJugs, int pos[], int pistaLength) {
             else
                 cout << " ";
         }
-        cout << "|"; // meta
+        cout << "|"; 
     }
     cout << endl;
 }
@@ -137,38 +155,38 @@ void playRace(Jugador jugs[], int numJugs) {
         usados[bestIdx] = true;
     }
 
-    // determinar ganador
-    int maxPuntos = 0;
-    for (int i = 0; i < numJugs; i++) {
-        if (histCarr[numCarr].puntajes[i] > maxPuntos)
-            maxPuntos = histCarr[numCarr].puntajes[i];
-    }
+     // Determinar ganador
+     int maxPuntos = 0;
+     for (int i = 0; i < numJugs; i++)
+         if (histCarr[numCarr].puntajes[i] > maxPuntos)
+         maxPuntos = histCarr[numCarr].puntajes[i];
 
-    int cuentaMax = 0;
-    int ganadorIdx = -1;
-    for (int i = 0; i < numJugs; i++) {
-        if (histCarr[numCarr].puntajes[i] == maxPuntos) {
-            cuentaMax++;
-            ganadorIdx = histCarr[numCarr].posiciones[i];
-        }
+     int cuentaMax = 0;
+     int ganadorIdx = -1;
+     for (int i = 0; i < numJugs; i++) {
+         if (histCarr[numCarr].puntajes[i] == maxPuntos) {
+         cuentaMax++;
+         ganadorIdx = histCarr[numCarr].posiciones[i];
     }
+}
 
-    if (cuentaMax > 1) {
-        histCarr[numCarr].ganador = "Empate";
-        for (int i = 0; i < numJugs; i++) {
-            if (histCarr[numCarr].puntajes[i] == maxPuntos)
-                jugs[histCarr[numCarr].posiciones[i]].empates++;
-        }
-        cout << "Ganador: Empate" << endl;
-    } else {
-        histCarr[numCarr].ganador = jugs[ganadorIdx].nombre;
-        jugs[ganadorIdx].victorias++;
-        cout << "Ganador: " << histCarr[numCarr].ganador << endl;
+     if (cuentaMax > 1) {
+         histCarr[numCarr].ganador = "Empate";
+         for (int i = 0; i < numJugs; i++) {
+              if (histCarr[numCarr].puntajes[i] == maxPuntos)
+              jugs[histCarr[numCarr].posiciones[i]].empates++;
     }
+         cout << "Ganador: Empate" << endl;
+}   else {
+         histCarr[numCarr].ganador = jugs[ganadorIdx].nombre;
+         jugs[ganadorIdx].victorias++;  // acumula victorias
+         cout << "Ganador: " << histCarr[numCarr].ganador << endl;
+}
 
-    // actualizar carreras jugadas
-    for (int i = 0; i < numJugs; i++)
-        jugs[i].carrerasJugadas++;
+     // actualizar carreras jugadas
+     for (int i = 0; i < numJugs; i++)
+          jugs[i].carrerasJugadas++;
+
 
     // Mostrar orden de llegada
     cout << "--- Orden de llegada ---" << endl;
@@ -211,7 +229,7 @@ void mostrarResumenCarreras() {
         cout << "Ganador: " << histCarr[c].ganador << endl;
         for (int p = 0; p < histCarr[c].numJugadores; p++) {
             int idx = histCarr[c].posiciones[p];
-            cout << (p + 1) << "°: " << histCarr[c].participantes[idx]
+            cout << (p + 1) << "#: " << histCarr[c].participantes[idx]
                  << " - Puntos: " << histCarr[c].puntajes[p] << endl;
         }
         cout << endl;
@@ -230,7 +248,7 @@ void guardarHistorialArchivo() {
         archivo << "Ganador: " << histCarr[c].ganador << endl;
         for (int p = 0; p < histCarr[c].numJugadores; p++) {
             int idx = histCarr[c].posiciones[p];
-            archivo << (p + 1) << "°: " << histCarr[c].participantes[idx]
+            archivo << (p + 1) << "#: " << histCarr[c].participantes[idx]
                     << " - Puntos: " << histCarr[c].puntajes[p] << endl;
         }
         archivo << endl;
