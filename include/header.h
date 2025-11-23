@@ -1,49 +1,43 @@
 #ifndef HEADER_H
 #define HEADER_H
 
-#include <iostream>
 #include <string>
 using namespace std;
 
-#define MAX_JUGADORES 5
-#define MAX_CARRERAS 100
-#define PISTA 50
+const int MAX_JUGADORES = 5;   // Máximo jugadores por carrera
+const int MAX_CARRERAS = 50;   // Historial máximo de carreras
 
+// Estructura para jugadores
 struct Jugador {
     string nombre;
     char simbolo;
-    int victorias = 0;
-    int empates = 0;
-    int carrerasJugadas = 0;
+    int victorias;
+    int carrerasJugadas;
+    int empates;
 };
 
+// Estructura para almacenar la carrera
 struct Carrera {
     string fechaHora;
     string ganador;
+    int numJugadores;
     string participantes[MAX_JUGADORES];
-    int posiciones[MAX_JUGADORES];
-    int puntajes[MAX_JUGADORES];
-    int numJugadores = 0;
+    int posiciones[MAX_JUGADORES]; // índice del jugador según orden de llegada
+    int puntajes[MAX_JUGADORES];   // puntaje según orden de llegada
 };
 
-// variables globales 
-extern Carrera histCarr[MAX_CARRERAS];
-extern int numCarr;
-
-// utilitarias
+// Funciones de manejo
 void gotoxy(int x, int y);
 void ocultarCursor();
 int avanceAleatorio();
 
-// funciones
 void registrarJugadores(Jugador jugs[], int &numJugs);
 void playRace(Jugador jugs[], int numJugs);
-void dibujarPista(Jugador jugs[], int numJugs, int pos[]);
+
 void mostrarEstadisticas(Jugador jugs[], int numJugs);
 void mostrarResumenCarreras();
-void mostrarOrdenLlegada();
 void guardarHistorialArchivo();
-void mostrarTop3(Jugador jugadores[], int numJugs);
-
+void mostrarOrdenLlegada();
+void mostrarTop3(Jugador jugs[], int numJugs);
 
 #endif

@@ -5,15 +5,15 @@
 #include <string>
 #include <limits>
 #include <fstream>
-#include <windows.h>   
+#include <windows.h>
 #include "../include/header.h"
 using namespace std;
 
-// definicion de las variables globales 
+// Variables globales
 Carrera histCarr[MAX_CARRERAS];
 int numCarr = 0;
 
-// posiciona cursor 
+// Posicionar cursor en consola
 void gotoxy(int x, int y) {
     COORD c;
     c.X = x;
@@ -21,6 +21,7 @@ void gotoxy(int x, int y) {
     SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), c);
 }
 
+// Ocultar cursor
 void ocultarCursor() {
     HANDLE hCon = GetStdHandle(STD_OUTPUT_HANDLE);
     CONSOLE_CURSOR_INFO cci;
@@ -29,11 +30,12 @@ void ocultarCursor() {
     SetConsoleCursorInfo(hCon, &cci);
 }
 
-// avance aleatorio 
+// Avance aleatorio
 int avanceAleatorio() {
     return (rand() % 3) + 1;
 }
 
+// Registrar jugadores
 void registrarJugadores(Jugador jugs[], int &numJugs) {
     int cantidad;
     cout << "Cuantos jugadores se desean registrar? (2 a 5): ";
@@ -60,7 +62,7 @@ void registrarJugadores(Jugador jugs[], int &numJugs) {
             }
         }
 
-        // Verificar si el jugador ya existe
+        // Verificar si ya existe
         bool existe = false;
         for (int j = 0; j < numJugs; j++) {
             if (jugs[j].nombre == nombre) {
@@ -83,7 +85,7 @@ void registrarJugadores(Jugador jugs[], int &numJugs) {
     cout << "Registro completado" << endl;
 }
 
-
+// Dibujar pista
 void dibujarPista(Jugador jugs[], int numJugs, int pos[], int pistaLength) {
     system("cls");
     for (int i = 0; i < numJugs; i++) {
@@ -94,117 +96,129 @@ void dibujarPista(Jugador jugs[], int numJugs, int pos[], int pistaLength) {
             else
                 cout << " ";
         }
-        cout << "|"; 
+        cout << "|";
     }
     cout << endl;
 }
 
-void playRace(Jugador jugs[], int numJugs) {
-    ocultarCursor();
-    srand(static_cast<unsigned>(time(0)));
+// Función para calcular ganador, retorna -1 si hay empate
+int calcularGanador(int pos[], int numJugs) {
+    int maxPos = pos[0];
+    int ganadorIdx = 0;
+    bool empate = false;
 
-    // obtener ancho de pantalla para la pista
-    CONSOLE_SCREEN_BUFFER_INFO csbi;
-    int pistaLength = 80;
-    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-    if (GetConsoleScreenBufferInfo(hConsole, &csbi)) {
-        pistaLength = csbi.srWindow.Right - csbi.srWindow.Left - 2;
+    for (int i = 1; i < numJugs; i++) {
+        if (pos[i] > maxPos) {
+            maxPos = pos[i];
+            ganadorIdx = i;
+            empate = false;
+        } else if (pos[i] == maxPos) {
+            empate = true;
+        }
     }
 
-    int pos[MAX_JUGADORES] = {0}; 
+    if (empate) return -1;
+    return ganadorIdx;
+}
 
-    // guardar fecha y hora de la carrera
+// Jugar carrera
+void playRace(Jugador jugs[], int numJugs) {
+    ocultarCursor();
+    int pos[MAX_JUGADORES] = {0};
+    int pistaLength = 80;
+
+    // Fecha y hora
     time_t t = time(0);
     string fecha = ctime(&t);
     if (!fecha.empty() && fecha.back() == '\n') fecha.pop_back();
-
     histCarr[numCarr].fechaHora = fecha;
     histCarr[numCarr].numJugadores = numJugs;
+
     for (int i = 0; i < numJugs; i++)
         histCarr[numCarr].participantes[i] = jugs[i].nombre;
 
-    bool terminado = false;
+    // Determinar ancho de la pista
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
+    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+    if (GetConsoleScreenBufferInfo(hConsole, &csbi))
+        pistaLength = csbi.srWindow.Right - csbi.srWindow.Left - 2;
 
-    while (!terminado) {
-        terminado = true;
+    // Simulación de la carrera
+    bool carreraTerminada = false;
+    while (!carreraTerminada) {
+        carreraTerminada = true;
         for (int i = 0; i < numJugs; i++) {
             if (pos[i] < pistaLength - 1) {
                 pos[i] += avanceAleatorio();
                 if (pos[i] >= pistaLength - 1) pos[i] = pistaLength - 1;
-                terminado = false;
+                carreraTerminada = false;
             }
         }
-
         dibujarPista(jugs, numJugs, pos, pistaLength);
         Sleep(80);
     }
 
-    // guardar posiciones y puntajes
+    // --- Calcular orden de llegada ---
     bool usados[MAX_JUGADORES] = {false};
     for (int rank = 0; rank < numJugs; rank++) {
-        int best = -1, bestIdx = -1;
+        int mejorPos = -1;
+        int mejorIdx = -1;
         for (int i = 0; i < numJugs; i++) {
-            if (!usados[i] && pos[i] > best) { 
-                best = pos[i]; 
-                bestIdx = i; 
+            if (!usados[i] && pos[i] > mejorPos) {
+                mejorPos = pos[i];
+                mejorIdx = i;
             }
         }
-        if (bestIdx == -1) bestIdx = 0;
-        histCarr[numCarr].posiciones[rank] = bestIdx;
+        histCarr[numCarr].posiciones[rank] = mejorIdx;
         histCarr[numCarr].puntajes[rank] = (numJugs - rank) * 2;
-        usados[bestIdx] = true;
+        usados[mejorIdx] = true;
     }
 
-     // Determinar ganador
-     int maxPuntos = 0;
-     for (int i = 0; i < numJugs; i++)
-         if (histCarr[numCarr].puntajes[i] > maxPuntos)
-         maxPuntos = histCarr[numCarr].puntajes[i];
-
-     int cuentaMax = 0;
-     int ganadorIdx = -1;
-     for (int i = 0; i < numJugs; i++) {
-         if (histCarr[numCarr].puntajes[i] == maxPuntos) {
-         cuentaMax++;
-         ganadorIdx = histCarr[numCarr].posiciones[i];
+    // --- Determinar ganador real ---
+    int primerLugarIdx = histCarr[numCarr].posiciones[0];
+    int puntosMax = histCarr[numCarr].puntajes[0];
+    bool hayEmpate = false;
+    for (int i = 1; i < numJugs; i++) {
+        if (histCarr[numCarr].puntajes[i] == puntosMax) {
+            hayEmpate = true;
+            break;
+        }
     }
-}
 
-     if (cuentaMax > 1) {
-         histCarr[numCarr].ganador = "Empate";
-         for (int i = 0; i < numJugs; i++) {
-              if (histCarr[numCarr].puntajes[i] == maxPuntos)
-              jugs[histCarr[numCarr].posiciones[i]].empates++;
+    if (hayEmpate) {
+        histCarr[numCarr].ganador = "Empate";
+        for (int i = 0; i < numJugs; i++) {
+            if (histCarr[numCarr].puntajes[i] == puntosMax)
+                jugs[histCarr[numCarr].posiciones[i]].empates++;
+        }
+        cout << "Ganador: Empate" << endl;
+    } else {
+        histCarr[numCarr].ganador = jugs[primerLugarIdx].nombre;
+        jugs[primerLugarIdx].victorias++;
+        cout << "Ganador: " << histCarr[numCarr].ganador << endl;
     }
-         cout << "Ganador: Empate" << endl;
-}   else {
-         histCarr[numCarr].ganador = jugs[ganadorIdx].nombre;
-         jugs[ganadorIdx].victorias++;  // acumula victorias
-         cout << "Ganador: " << histCarr[numCarr].ganador << endl;
-}
 
-     // actualizar carreras jugadas
-     for (int i = 0; i < numJugs; i++)
-          jugs[i].carrerasJugadas++;
-
+    // Actualizar carreras jugadas
+    for (int i = 0; i < numJugs; i++)
+        jugs[i].carrerasJugadas++;
 
     // Mostrar orden de llegada
-    cout << "--- Orden de llegada ---" << endl;
-    for (int p = 0; p < numJugs; p++) {
-        int idx = histCarr[numCarr].posiciones[p];
-        cout << (p + 1) << "#: " << jugs[idx].nombre
-             << " - Puntos: " << histCarr[numCarr].puntajes[p] << endl;
+    cout << "\n--- Orden de llegada ---" << endl;
+    for (int i = 0; i < numJugs; i++) {
+        int idx = histCarr[numCarr].posiciones[i];
+        cout << (i + 1) << "# " << jugs[idx].nombre
+             << " - Puntos: " << histCarr[numCarr].puntajes[i] << endl;
     }
     cout << "------------------------" << endl;
 
     numCarr++;
-
-    cout << "Presione ENTER para continuar..." << endl;
-    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+    cout << "\nPresione ENTER para continuar..." << endl;
+    cin.ignore(numeric_limits<std::streamsize>::max(), '\n');
     cin.get();
 }
 
 
+// Mostrar estadísticas
 void mostrarEstadisticas(Jugador jugs[], int numJugs) {
     if (numJugs == 0) {
         cout << "No hay jugadores registrados" << endl;
@@ -219,6 +233,7 @@ void mostrarEstadisticas(Jugador jugs[], int numJugs) {
     }
 }
 
+// Mostrar resumen de carreras
 void mostrarResumenCarreras() {
     if (numCarr == 0) {
         cout << "No se ha jugado ninguna carrera" << endl;
@@ -236,6 +251,7 @@ void mostrarResumenCarreras() {
     }
 }
 
+// Guardar historial en archivo
 void guardarHistorialArchivo() {
     ofstream archivo("historialCarreras.txt", ios::app);
     if (!archivo) {
@@ -256,6 +272,7 @@ void guardarHistorialArchivo() {
     archivo.close();
 }
 
+// Mostrar orden de llegada
 void mostrarOrdenLlegada() {
     if (numCarr == 0) {
         cout << "No se ha jugado ninguna carrera" << endl;
@@ -272,6 +289,7 @@ void mostrarOrdenLlegada() {
     }
 }
 
+// Top 3 jugadores
 bool compararVictorias(const Jugador &a, const Jugador &b) {
     return a.victorias > b.victorias;
 }
@@ -285,13 +303,19 @@ void mostrarTop3(Jugador jugs[], int numJugs) {
     cout << "--- Top 3 jugadores ---" << endl;
 
     Jugador copia[MAX_JUGADORES];
-    for (int i = 0; i < numJugs; i++)
-        copia[i] = jugs[i];
+    for (int i = 0; i < numJugs; i++) copia[i] = jugs[i];
 
-    sort(copia, copia + numJugs, compararVictorias);
+    for (int i = 0; i < numJugs - 1; i++) {
+        for (int j = i + 1; j < numJugs; j++) {
+            if (copia[i].victorias < copia[j].victorias) {
+                Jugador tmp = copia[i];
+                copia[i] = copia[j];
+                copia[j] = tmp;
+            }
+        }
+    }
 
     int top = (numJugs < 3) ? numJugs : 3;
-
     for (int i = 0; i < top; i++) {
         cout << i + 1 << "# " << copia[i].nombre
              << " - Victorias: " << copia[i].victorias
