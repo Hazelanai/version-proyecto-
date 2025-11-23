@@ -51,28 +51,9 @@ int main() {
             break;
 
         case 6:
-            if (numJugadores > 0) {
-                cout << "TOP 3 jugadores:" << endl;
-
-                Jugador copia[MAX_JUGADORES];
-                for (int i = 0; i < numJugadores; i++)
-                    copia[i] = jugadores[i];
-
-                sort(copia, copia + numJugadores, [](Jugador a, Jugador b) {
-                    return a.victorias > b.victorias;
-                });
-
-                int top = (numJugadores < 3) ? numJugadores : 3;
-
-                for (int i = 0; i < top; i++) {
-                    cout << i + 1 << "° " << copia[i].nombre
-                         << " - Victorias: " << copia[i].victorias << endl;
-                }
-
-            } else {
-                cout << "No hay jugadores registrados" << endl;
-            }
+            mostrarTop3(jugadores, numJugadores);
             break;
+
 
         case 7:
             guardarHistorialArchivo();

@@ -1,4 +1,5 @@
 #include <iostream>
+#include <algorithm>
 #include <cstdlib>
 #include <ctime>
 #include <string>
@@ -173,7 +174,7 @@ void playRace(Jugador jugs[], int numJugs) {
     cout << "--- Orden de llegada ---" << endl;
     for (int p = 0; p < numJugs; p++) {
         int idx = histCarr[numCarr].posiciones[p];
-        cout << (p + 1) << "°: " << jugs[idx].nombre
+        cout << (p + 1) << "#: " << jugs[idx].nombre
              << " - Puntos: " << histCarr[numCarr].puntajes[p] << endl;
     }
     cout << "------------------------" << endl;
@@ -217,7 +218,6 @@ void mostrarResumenCarreras() {
     }
 }
 
-// guardar historial en archivo
 void guardarHistorialArchivo() {
     ofstream archivo("historialCarreras.txt", ios::app);
     if (!archivo) {
@@ -252,4 +252,33 @@ void mostrarOrdenLlegada() {
         }
         cout << endl;
     }
+}
+
+bool compararVictorias(const Jugador &a, const Jugador &b) {
+    return a.victorias > b.victorias;
+}
+
+void mostrarTop3(Jugador jugs[], int numJugs) {
+    if (numJugs == 0) {
+        cout << "No hay jugadores registrados" << endl;
+        return;
+    }
+
+    cout << "--- Top 3 jugadores ---" << endl;
+
+    Jugador copia[MAX_JUGADORES];
+    for (int i = 0; i < numJugs; i++)
+        copia[i] = jugs[i];
+
+    sort(copia, copia + numJugs, compararVictorias);
+
+    int top = (numJugs < 3) ? numJugs : 3;
+
+    for (int i = 0; i < top; i++) {
+        cout << i + 1 << "# " << copia[i].nombre
+             << " - Victorias: " << copia[i].victorias
+             << " | Empates: " << copia[i].empates
+             << " | Carreras jugadas: " << copia[i].carrerasJugadas << endl;
+    }
+    cout << "---------------------------------------------" << endl;
 }

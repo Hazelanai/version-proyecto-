@@ -43,5 +43,7 @@ void mostrarEstadisticas(Jugador jugs[], int numJugs);
 void mostrarResumenCarreras();
 void mostrarOrdenLlegada();
 void guardarHistorialArchivo();
+void mostrarTop3(Jugador jugadores[], int numJugs);
+
 
 #endif
