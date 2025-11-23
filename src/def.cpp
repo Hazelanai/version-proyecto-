@@ -92,7 +92,7 @@ void playRace(Jugador jugs[], int numJugs) {
         pistaLength = csbi.srWindow.Right - csbi.srWindow.Left - 2;
     }
 
-    int pos[MAX_JUGADORES] = {0}; // posiciones de los jugadores
+    int pos[MAX_JUGADORES] = {0}; 
 
     // guardar fecha y hora de la carrera
     time_t t = time(0);
@@ -117,7 +117,7 @@ void playRace(Jugador jugs[], int numJugs) {
         }
 
         dibujarPista(jugs, numJugs, pos, pistaLength);
-        Sleep(80); // velocidad más rápida
+        Sleep(80);
     }
 
     // guardar posiciones y puntajes
@@ -136,7 +136,7 @@ void playRace(Jugador jugs[], int numJugs) {
         usados[bestIdx] = true;
     }
 
-    // determinar ganador según puntaje máximo
+    // determinar ganador
     int maxPuntos = 0;
     for (int i = 0; i < numJugs; i++) {
         if (histCarr[numCarr].puntajes[i] > maxPuntos)
@@ -144,9 +144,13 @@ void playRace(Jugador jugs[], int numJugs) {
     }
 
     int cuentaMax = 0;
-    for (int i = 0; i < numJugs; i++)
-        if (histCarr[numCarr].puntajes[i] == maxPuntos)
+    int ganadorIdx = -1;
+    for (int i = 0; i < numJugs; i++) {
+        if (histCarr[numCarr].puntajes[i] == maxPuntos) {
             cuentaMax++;
+            ganadorIdx = histCarr[numCarr].posiciones[i];
+        }
+    }
 
     if (cuentaMax > 1) {
         histCarr[numCarr].ganador = "Empate";
@@ -156,13 +160,6 @@ void playRace(Jugador jugs[], int numJugs) {
         }
         cout << "Ganador: Empate" << endl;
     } else {
-        int ganadorIdx = -1;
-        for (int i = 0; i < numJugs; i++) {
-            if (histCarr[numCarr].puntajes[i] == maxPuntos) {
-                ganadorIdx = histCarr[numCarr].posiciones[i];
-                break;
-            }
-        }
         histCarr[numCarr].ganador = jugs[ganadorIdx].nombre;
         jugs[ganadorIdx].victorias++;
         cout << "Ganador: " << histCarr[numCarr].ganador << endl;
@@ -172,12 +169,22 @@ void playRace(Jugador jugs[], int numJugs) {
     for (int i = 0; i < numJugs; i++)
         jugs[i].carrerasJugadas++;
 
+    // Mostrar orden de llegada
+    cout << "--- Orden de llegada ---" << endl;
+    for (int p = 0; p < numJugs; p++) {
+        int idx = histCarr[numCarr].posiciones[p];
+        cout << (p + 1) << "°: " << jugs[idx].nombre
+             << " - Puntos: " << histCarr[numCarr].puntajes[p] << endl;
+    }
+    cout << "------------------------" << endl;
+
     numCarr++;
 
     cout << "Presione ENTER para continuar..." << endl;
     cin.ignore(numeric_limits<streamsize>::max(), '\n');
     cin.get();
 }
+
 
 void mostrarEstadisticas(Jugador jugs[], int numJugs) {
     if (numJugs == 0) {

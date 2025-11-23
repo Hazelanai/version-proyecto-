@@ -48,3 +48,10 @@ Ganador: Hazel
 2°: Tomas - Puntos: 4
 3°: Evelyn - Puntos: 2
 
+Carrera 1
+Fecha: Sat Nov 22 21:42:50 2025
+Ganador: Hazel
+1°: Hazel - Puntos: 6
+2°: Lola - Puntos: 4
+3°: Fer - Puntos: 2
+
